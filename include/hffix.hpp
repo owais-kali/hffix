@@ -733,12 +733,12 @@ public:
         next_ += 2;
         memcpy(next_, begin_string_version, std::strlen(begin_string_version));
         next_ += std::strlen(begin_string_version);
-        *(next_++) = '\x01';
+        *(next_++) = '|';
         memcpy(next_, "9=", 2);
         next_ += 2;
         body_length_ = next_;
         next_ += 6; // 6 characters reserved for BodyLength.
-        *next_++ = '\x01';
+        *next_++ = '|';
     }
 
 
@@ -794,9 +794,9 @@ public:
             next_[2] = '0' + (checksum % 10);
 
             next_ += 3;
-            *next_++ = '\x01';
+            *next_++ = '|';
         } else {
-            memcpy(next_, "10=000\x01", 7);
+            memcpy(next_, "10=000|", 7);
             next_ += 7;
         }
 
@@ -824,7 +824,7 @@ public:
         *next_++ = '=';
         memcpy(next_, begin, end - begin);
         next_ += (end - begin);
-        *next_++ = '\x01';
+        *next_++ = '|';
     }
 
     /*!
@@ -890,7 +890,7 @@ public:
         }
         *next_++ = '=';
         *next_++ = character;
-        *next_++ = '\x01';
+        *next_++ = '|';
     }
 //@}
 
@@ -912,7 +912,7 @@ public:
         *next_++ = '=';
         next_ = details::itoa(number, next_, buffer_end_);
         if (next_ >= buffer_end_) details::throw_range_error();
-        *next_++ = '\x01';
+        *next_++ = '|';
     }
 
 //@}
@@ -941,7 +941,7 @@ public:
         *next_++ = '=';
         next_ = details::dtoa(mantissa, exponent, next_, buffer_end_);
         if (next_ >= buffer_end_) details::throw_range_error();
-        *next_++ = '\x01';
+        *next_++ = '|';
     }
 //@}
 
@@ -971,7 +971,7 @@ public:
         next_ += 2;
         itoa_padded(day, next_, next_ + 2);
         next_ += 2;
-        *next_++ = '\x01';
+        *next_++ = '|';
     }
     /*!
     \brief Append a month-year field to the message.
@@ -992,7 +992,7 @@ public:
         next_ += 4;
         itoa_padded(month, next_, next_ + 2);
         next_ += 2;
-        *next_++ = '\x01';
+        *next_++ = '|';
     }
 
     /*!
@@ -1023,7 +1023,7 @@ public:
         *next_++ = ':';
         itoa_padded(second, next_, next_ + 2);
         next_ += 2;
-        *next_++ = '\x01';
+        *next_++ = '|';
     }
 
     /*!
@@ -1056,7 +1056,7 @@ public:
         *next_++ = '.';
         itoa_padded(millisecond, next_, next_ + 3);
         next_ += 3;
-        *next_++ = '\x01';
+        *next_++ = '|';
     }
 
     /*!
@@ -1089,7 +1089,7 @@ public:
         *next_++ = '.';
         itoa_padded(nanosecond, next_, next_ + 9);
         next_ += 9;
-        *next_++ = '\x01';
+        *next_++ = '|';
     }
 
     /*!
@@ -1131,7 +1131,7 @@ public:
         *next_++ = ':';
         itoa_padded(second, next_, next_ + 2);
         next_ += 2;
-        *next_++ = '\x01';
+        *next_++ = '|';
     }
 
     /*!
@@ -1174,7 +1174,7 @@ public:
         *next_++ = '.';
         itoa_padded(millisecond, next_, next_ + 3);
         next_ += 3;
-        *next_++ = '\x01';
+        *next_++ = '|';
     }
 
     /*!
@@ -1217,7 +1217,7 @@ public:
         *next_++ = '.';
         itoa_padded(nanosecond, next_, next_ + 9);
         next_ += 9;
-        *next_++ = '\x01';
+        *next_++ = '|';
     }
 //@}
 
@@ -1488,7 +1488,7 @@ public:
         *next_++ = '=';
         next_ = details::itoa(end - begin, next_, buffer_end_);
         if (next_ == buffer_end_) details::throw_range_error();
-        *next_++ = '\x01';
+        *next_++ = '|';
         next_ = details::itoa(tag_data, next_, buffer_end_);
 
         if (buffer_end_ - next_ < (end - begin) + 2) {
@@ -1497,7 +1497,7 @@ public:
         *next_++ = '=';
         memcpy(next_, begin, end - begin);
         next_ += end - begin;
-        *next_++ = '\x01';
+        *next_++ = '|';
     }
 
 
@@ -2695,14 +2695,14 @@ private:
     void init() {
 
         // Skip the version prefix string "8=FIX.4.2" or "8=FIXT.1.1", et cetera.
-        char const* b = buffer_ + 9; // look for the first '\x01'
+        char const* b = buffer_ + 9; // look for the first '|'
 
         while(true) {
             if (b >= buffer_end_) {
                 is_complete_ = false;
                 return;
             }
-            if (*b == '\x01') {
+            if (*b == '|') {
                 prefix_end_ = b;
                 break;
             }
@@ -2730,7 +2730,7 @@ private:
                 is_complete_ = false;
                 return;
             }
-            if (*b == '\x01') break;
+            if (*b == '|') break;
             if (*b < '0' || *b > '9') { // this is the only time we need to check for numeric ascii.
                 invalid();
                 return;
@@ -2757,7 +2757,7 @@ private:
             return;
         }
 
-        if (*(checksum - 1) != '\x01') { // check for SOH before the checksum.
+        if (*(checksum - 1) != '|') { // check for SOH before the checksum.
                                          // this guarantees that at least
                                          // there is one SOH in the message
                                          // which will prevent us from
@@ -2768,7 +2768,7 @@ private:
             return;
         }
 
-        if (*(checksum + 6) != '\x01') { // check for trailing SOH
+        if (*(checksum + 6) != '|') { // check for trailing SOH
             invalid();
             return;
         }
@@ -2777,7 +2777,7 @@ private:
         begin_.current_.tag_ = 35; // MsgType
         b += 3;
         begin_.current_.value_.begin_ = b;
-        while(*++b != '\x01') {
+        while(*++b != '|') {
             if (b >= checksum) {
                 invalid();
                 return;
@@ -2821,17 +2821,17 @@ inline void message_reader_const_iterator::increment()
     current_.value_.begin_ = buffer_;
     current_.tag_ = 0;
 
-    while(*current_.value_.begin_ != '=' && *current_.value_.begin_ != '\x01') {
+    while(*current_.value_.begin_ != '=' && *current_.value_.begin_ != '|') {
         current_.tag_ *= 10;
         current_.tag_ += (*current_.value_.begin_ - '0');
         ++current_.value_.begin_;
     }
 
-    // we expect to see a '='. if we see a '\x01' at this point then this field
+    // we expect to see a '='. if we see a '|' at this point then this field
     // has no value and the message is invalid, so we're doomed. it's too
     // late to set is_invalid, though, so let's just say that this field
     // has a null value.
-    if (*current_.value_.begin_ == '\x01') {
+    if (*current_.value_.begin_ == '|') {
         current_.value_.end_ = current_.value_.begin_;
         return;
     }
@@ -2840,7 +2840,7 @@ inline void message_reader_const_iterator::increment()
     ++current_.value_.begin_;
 
     // find the end of the field value
-    current_.value_.end_ = std::find(current_.value_.begin_, message_reader_->message_end(), '\x01');
+    current_.value_.end_ = std::find(current_.value_.begin_, message_reader_->message_end(), '|');
     if (details::is_tag_a_data_length(current_.tag_)) {
         size_t data_len = details::atou<size_t>(current_.value_.begin_, current_.value_.end_);
 
